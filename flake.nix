@@ -99,20 +99,20 @@
       build-system = [ setuptools ];
 
       # propagatedNativeBuildInputs = with pkgs; [ pytorch-cuda-11 cudatoolkit_11_3 python38Packages.pybind11 ];
-      nativeBuildInputs = with pkgs; [ which cudatoolkit_11_3 python38Packages.pybind11 ];
-      buildInputs = [
-        pytorch-cuda-11
+      nativeBuildInputs = with pkgs; [ which cudaPackages.cudatoolkit python3Packages.pybind11 ];
+      buildInputs = with pkgs; [
+        torch
 
-        pkgs.cudatoolkit_11_3
-        pkgs.cudnn_cudatoolkit_11_3
+        cudaPackages.cudatoolkit
+        cudaPackages.cudnn
         pybind11
         mmcv
         # torchpack
       ];
 
-      preConfigure = ''
-        export TORCH_CUDA_ARCH_LIST="${nixpkgs.lib.concatStringsSep ";" pytorch-cuda-11.cudaArchList}"
-      '';
+      # preConfigure = ''
+      #   export TORCH_CUDA_ARCH_LIST="${nixpkgs.lib.concatStringsSep ";" pytorch-cuda-11.cudaArchList}"
+      # '';
     };
 
     in 
