@@ -20,7 +20,7 @@
 
     pkgs = import nixpkgs {
       inherit system;
-      cudaSupport = true;
+      config.cudaSupport = true;
       config.allowUnfree = true;
       overlays = [ cuda-11-overlay ];
     };
@@ -93,32 +93,45 @@
 
     bevfusion = with pkgs.python3Packages; buildPythonPackage {
       pname = "bevfusion";
-      src = bevfusion-src;
+      src = ./.;
       version = "1.0.0";
 
       build-system = [ setuptools ];
 
       # propagatedNativeBuildInputs = with pkgs; [ pytorch-cuda-11 cudatoolkit_11_3 python38Packages.pybind11 ];
-      nativeBuildInputs = with pkgs; [ which cudaPackages.cudatoolkit python3Packages.pybind11 ];
+      nativeBuildInputs = with pkgs; [
+        which
+        # cudaPackages.cudatoolkit
+        cudaPackages.cudnn
+        cudaPackages.cuda_nvcc
+        python3Packages.pybind11
+      ];
       buildInputs = with pkgs; [
+        # torch-cuda
         torch
 
-        cudaPackages.cudatoolkit
+        # cudaPackages.cudatoolkit
+        cudaPackages.cuda_nvcc
         cudaPackages.cudnn
         pybind11
         mmcv
         # torchpack
       ];
+      nativeCheckInputs = [ pytest ];
 
-      # preConfigure = ''
-      #   export TORCH_CUDA_ARCH_LIST="${nixpkgs.lib.concatStringsSep ";" pytorch-cuda-11.cudaArchList}"
-      # '';
+      # env.CUDA_HOME = lib.getDev pkgs.cudaPackages.cuda_nvcc;
+      preConfigure = with pkgs.cudaPackages; ''
+        export CC=${backendStdenv.cc}/bin/cc
+        export CXX=${backendStdenv.cc}/bin/c++
+        export TORCH_CUDA_ARCH_LIST="${lib.concatStringsSep ";" torch.cudaCapabilities}"
+        export FORCE_CUDA=1
+      '';
     };
 
     in 
 
   {
-    packages.default = pkgs.python3Packages.torch;
+    packages.default = bevfusion;
     # packages.default = experimental-torch;
 
     # packages.default = self.packages.bevfusion;
